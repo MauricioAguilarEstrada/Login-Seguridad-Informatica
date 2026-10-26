@@ -45,7 +45,7 @@ public class LoginController {
         }
 
         // Validar Clave
-        String consultaClave = "SELECT claver FROM usuarios WHERE usuario = ? AND correo = ?\"";
+        String consultaClave = "SELECT claver FROM usuarios WHERE usuario = ? AND correo = ?";
         List<String> clavesBD = jdbcTemplate.queryForList(consultaClave, String.class, request.usuario());
 
         //Se verifica que la lista clavesDB retorne los valores de usuario y clave, de lo contrario se retorna un http no autorizado
