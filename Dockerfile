@@ -7,6 +7,7 @@ RUN mvn clean package -DskipTests
 # Etapa de ejecución
 FROM eclipse-temurin:25-jre
 WORKDIR /app
-ENTRYPOINT ["java", "-Djava.net.preferIPv4Stack=true", "-jar", "app.jar"]
+# Filtramos específicamente el archivo que termina en SNAPSHOT.jar
+COPY --from=build /app/target/*-SNAPSHOT.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Djava.net.preferIPv4Stack=true", "-jar", "app.jar"]
