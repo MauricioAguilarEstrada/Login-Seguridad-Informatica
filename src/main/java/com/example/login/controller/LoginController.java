@@ -67,7 +67,7 @@ public class LoginController {
         // ==========================================
         // PASO 3: Envío de correo mediante API de Brevo
         // ==========================================
-        String apiKey = "xsmtpsib-4edfde69a4b027cd86f693c081ab18f509f2188036ad8b5b4b6cd46bb830dc35-juBSRuWfLJ9vDJDg";
+        String apiKey = "xsmtpsib-4edfde69a4b027cd86f693c081ab18f509f2188036ad8b5b4b6cd46bb830dc35-sWT6HECrVdRvmN8M";
         String jsonBody = "{"
                 + "\"sender\":{\"name\":\"Seguridad App\",\"email\":\"aemauricio22@gmail.com\"},"
                 + "\"to\":[{\"email\":\"" + request.correo() + "\"}],"
