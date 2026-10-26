@@ -74,7 +74,7 @@ public class LoginController {
                 + "\"subject\":\"Tu código de seguridad\","
                 + "\"htmlContent\":\"<p>Tu código de acceso es: <strong>" + codigoMfa + "</strong><br>Expira en 5 minutos.</p>\""
                 + "}";
-
+                System.out.println("Intentando usar la clave que empieza con: " + apiKey.substring(0, 15));
         try {
             // 1. Construir la petición HTTP
             HttpRequest httpRequest = HttpRequest.newBuilder()
