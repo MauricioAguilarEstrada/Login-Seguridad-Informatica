@@ -76,15 +76,22 @@ public class LoginController {
                 + "}";
 
         try {
+            // 1. Construir la petición HTTP
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
                     .header("accept", "application/json")
-                    .header("api-key", apiKey)
+                    .header("api-key", apiKey) // Usa tu NUEVA clave aquí
                     .header("content-type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
 
-            HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            // 2. Enviar la petición y guardar la respuesta
+            HttpResponse<String> response = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            
+            // 3. Imprimir el diagnóstico en la terminal de Render
+            System.out.println("Código de estado Brevo: " + response.statusCode());
+            System.out.println("Respuesta de Brevo: " + response.body());
+            
         } catch (Exception e) {
             System.out.println("Error enviando API de correo: " + e.getMessage());
         }
