@@ -37,18 +37,15 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<String> procesarLogin(@RequestBody LoginRequest request) {
 
-        // ==========================================
-        // PASO 1: Validar Usuario por Expresión Regular
-        // ==========================================
+
+        //Validar Usuario por Expresión Regular
         if (request.usuario() == null || !pattern.matcher(request.usuario()).matches()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Fallo en Paso 1: El formato del usuario es inválido.");
         }
 
-        // ==========================================
-        // PASO 2: Validar Clave
-        // ==========================================
-        String consultaClave = "SELECT claver FROM usuarios WHERE usuario = ?";
+        // Validar Clave
+        String consultaClave = "SELECT claver FROM usuarios WHERE usuario = ? AND correo = ?\"";
         List<String> clavesBD = jdbcTemplate.queryForList(consultaClave, String.class, request.usuario());
 
         //Se verifica que la lista clavesDB retorne los valores de usuario y clave, de lo contrario se retorna un http no autorizado
@@ -64,9 +61,7 @@ public class LoginController {
         String insertMfa = "INSERT INTO mfaCodigos (usuario_id, codigo, fecha_expiracion) VALUES (?, ?, NOW() + INTERVAL '5 minutes')";
         jdbcTemplate.update(insertMfa, request.usuario(), codigoMfa);
 
-        // ==========================================
-        // PASO 3: Envío de correo mediante API de Brevo
-        // ==========================================
+        // Envío de correo mediante API de Brevo
         String apiKey = "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";
         String jsonBody = "{"
                 + "\"sender\":{\"name\":\"Seguridad App\",\"email\":\"aemauricio22@gmail.com\"},"
@@ -74,21 +69,20 @@ public class LoginController {
                 + "\"subject\":\"Tu código de seguridad\","
                 + "\"htmlContent\":\"<p>Tu código de acceso es: <strong>" + codigoMfa + "</strong><br>Expira en 5 minutos.</p>\""
                 + "}";
-                System.out.println("Intentando usar la clave que empieza con: " + apiKey.substring(0, 15));
         try {
-            // 1. Construir la petición HTTP
+            //Construir la petición HTTP
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
                     .header("accept", "application/json")
-                    .header("api-key", apiKey) // Usa tu NUEVA clave aquí
+                    .header("api-key", apiKey)
                     .header("content-type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
 
-            // 2. Enviar la petición y guardar la respuesta
+            // Se envia la petición y se guarda la respuesta
             HttpResponse<String> response = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString());
             
-            // 3. Imprimir el diagnóstico en la terminal de Render
+            //Se imprime el diagnóstico en la terminal de Render
             System.out.println("Código de estado Brevo: " + response.statusCode());
             System.out.println("Respuesta de Brevo: " + response.body());
             
