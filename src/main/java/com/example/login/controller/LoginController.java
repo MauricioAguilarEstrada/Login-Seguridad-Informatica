@@ -4,15 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-//Libreria de regex
-import java.util.regex.Pattern;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.util.regex.Pattern;
 import java.util.List;
 import java.util.Random;
 
-//librerias para enviar correos
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+// Librerias para peticiones HTTP a Brevo
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,7 +22,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 public class LoginController {
 
     // 1. Definir la Expresión Regular
-        // 1. Definir la Expresión Regular
     // A) Debe contener el prefijo "DEV" al inicio
     // B) Debe contener 4 digitos despues del prefijo
     // C) Debe contener el apellido paterno del usuario empezando por mayuscula
@@ -32,8 +33,6 @@ public class LoginController {
     // 2. Inyectamos JdbcTemplate a nivel de clase
     @Autowired
     private JdbcTemplate jdbcTemplate;
-    @Autowired
-    private JavaMailSender mailSender;
 
     @PostMapping("/login")
     public ResponseEntity<String> procesarLogin(@RequestBody LoginRequest request) {
@@ -65,12 +64,30 @@ public class LoginController {
         String insertMfa = "INSERT INTO mfaCodigos (usuario_id, codigo, fecha_expiracion) VALUES (?, ?, NOW() + INTERVAL '5 minutes')";
         jdbcTemplate.update(insertMfa, request.usuario(), codigoMfa);
 
-        // Envío de correo
-        SimpleMailMessage mensaje = new SimpleMailMessage();
-        mensaje.setTo(request.correo());
-        mensaje.setSubject("Tu código de seguridad");
-        mensaje.setText("Tu código de acceso es: " + codigoMfa + "\nExpira en 5 minutos.");
-        mailSender.send(mensaje);
+        // ==========================================
+        // PASO 3: Envío de correo mediante API de Brevo
+        // ==========================================
+        String apiKey = "xsmtpsib-4edfde69a4b027cd86f693c081ab18f509f2188036ad8b5b4b6cd46bb830dc35-juBSRuWfLJ9vDJDg";
+        String jsonBody = "{"
+                + "\"sender\":{\"name\":\"Seguridad App\",\"email\":\"aemauricio22@gmail.com\"},"
+                + "\"to\":[{\"email\":\"" + request.correo() + "\"}],"
+                + "\"subject\":\"Tu código de seguridad\","
+                + "\"htmlContent\":\"<p>Tu código de acceso es: <strong>" + codigoMfa + "</strong><br>Expira en 5 minutos.</p>\""
+                + "}";
+
+        try {
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("accept", "application/json")
+                    .header("api-key", apiKey)
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            System.out.println("Error enviando API de correo: " + e.getMessage());
+        }
 
         return ResponseEntity.ok("Código enviado al correo.");
 
@@ -92,7 +109,6 @@ public class LoginController {
         return ResponseEntity.ok("Acceso final concedido.");
     }
 }
-
 
 // Estructura (DTO)
 record LoginRequest(String usuario, String clave, String correo) {}
