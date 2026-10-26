@@ -45,13 +45,13 @@ public class LoginController {
         }
 
         // Validar Clave
-        String consultaClave = "SELECT claver FROM usuarios WHERE usuario = ? AND correo = ?";
-        List<String> clavesBD = jdbcTemplate.queryForList(consultaClave, String.class, request.usuario());
+        String consultaAuth = "SELECT claver FROM usuarios WHERE usuario = ? AND correo = ?";
+        List<String> clavesBD = jdbcTemplate.queryForList(consultaAuth, String.class, request.usuario(), request.correo());
 
-        //Se verifica que la lista clavesDB retorne los valores de usuario y clave, de lo contrario se retorna un http no autorizado
+        // Se verifica que la consulta retorne la clave; de lo contrario el usuario, clave o correo no coinciden
         if (clavesBD.isEmpty() || !clavesBD.get(0).equals(request.clave())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Fallo en Paso 2: Usuario o clave incorrectos.");
+                    .body("Fallo en Paso 2: Usuario, clave o correo incorrectos.");
         }
 
         // Se genera y se guardada el código MFA
